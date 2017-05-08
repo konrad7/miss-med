@@ -36,7 +36,7 @@ public class Solution implements Comparable<Solution>{
     private void calculateFitness() {
         double deviationSum = 0.0;
         for (double[] in : inMatrix) {
-            deviationSum += Equation.calculateFirstEquation(in, this.params);
+            deviationSum += Math.abs(in[in.length-1] - Equation.calculateFirstEquation(in, this.params));
         }
         this.fitness = deviationSum/inMatrix.length;
     }

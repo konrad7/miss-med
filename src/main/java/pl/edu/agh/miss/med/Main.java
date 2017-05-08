@@ -14,7 +14,7 @@ public class Main {
     private static final String CATALOG = "src/main/resources/";
 
     private static final String IN_FILE = "25in_IKr_iv_padelall_pIC_no";
-//    private static final String TEST_FILE = "t-25in_IKr_iv_padelall_pIC_no";
+    private static final String TEST_FILE = "t-25in_IKr_iv_padelall_pIC_no";
     private static final String FILE_EXT = ".txt";
 
     private static final int FILE_NO = 1;
@@ -41,6 +41,16 @@ public class Main {
                 System.out.print(solution.getFitness() + " ");
             }
             System.out.println();
+        }
+        System.out.println();
+        System.out.println();
+
+        Solution bestSolution = solutions.get(0);
+        double[][] testMatrix = readCSV(CATALOG + TEST_FILE + FILE_NO + FILE_EXT);
+
+        System.out.println("Observed\tPredicted");
+        for (double[] test : testMatrix) {
+            System.out.println(test[test.length-1] + "\t\t" + Equation.calculateFirstEquation(test, bestSolution.getParams()));
         }
     }
 
