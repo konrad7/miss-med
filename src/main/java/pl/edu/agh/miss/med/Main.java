@@ -1,8 +1,17 @@
 package pl.edu.agh.miss.med;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,10 +28,10 @@ public class Main {
 
     private static final int FILE_NO = 1;
     private static final int POPULATION_NO = 15;
-    private static final int MUTATIONS_NO = 50;
-    private static final int ITERATIONS = 100;
+    private static final int MUTATIONS_NO = 120;
+    private static final int ITERATIONS = 60;
     private static final int PARAMETERS_NO = 2;
-    private static final int PROGRAM_RUNS = 2;
+    private static final int PROGRAM_RUNS = 20;
     private static final int STEP = 1;
 
 
@@ -86,6 +95,62 @@ public class Main {
             System.out.print(key + ": " + std_dev_map.get(key));
             System.out.println();
         }
+
+        displayChart(mean_errors, std_dev_map);
+    }
+
+    private static void displayChart(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
+        XYSeriesCollection seriesCollection = new XYSeriesCollection();
+        XYSeries meanSeries = new XYSeries("mean");
+        XYSeries stdDev1Series = new XYSeries("std-dev +");
+        XYSeries stdDev2Series = new XYSeries("std-dev -");
+
+        int iterMin = 15;
+        int iterMax = 60;
+        double minVal = Double.MAX_VALUE;
+        double maxVal = Double.MIN_VALUE;
+
+        for (Map.Entry<Integer, Double> entry : mean_errors.entrySet()) {
+            double iterNo = entry.getKey();
+            if (iterNo > iterMin && iterNo < iterMax) {
+                double mean = entry.getValue();
+                double std_dev = std_dev_map.get(entry.getKey());
+                meanSeries.add(iterNo, entry.getValue());
+                stdDev1Series.add(iterNo, mean + std_dev);
+                stdDev2Series.add(iterNo, mean - std_dev);
+
+                minVal = Math.min(minVal, mean - std_dev);
+                maxVal = Math.max(maxVal, mean + std_dev);
+            }
+        }
+
+        seriesCollection.addSeries(meanSeries);
+        seriesCollection.addSeries(stdDev1Series);
+        seriesCollection.addSeries(stdDev2Series);
+
+        String title = "FILE_NO=" + FILE_NO + " POPULATION_NO=" + POPULATION_NO + " MUTATIONS_NO=" + MUTATIONS_NO
+                + " ITERATIONS=" + ITERATIONS + "(" + iterMin + "-" + iterMax + ") PARAMETERS_NO=" + PARAMETERS_NO
+                + " PROGRAM_RUNS=" + PROGRAM_RUNS + " STEP=" + STEP;
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                title,"Iteration",
+                "Fitness",
+                seriesCollection, PlotOrientation.VERTICAL,
+                true,true,false);
+
+        XYPlot plot = chart.getXYPlot();
+        ValueAxis iterationAxis = plot.getDomainAxis();
+        iterationAxis.setRange(iterMin, iterMax);
+        ValueAxis valueAxis = plot.getRangeAxis();
+        valueAxis.setRange(minVal, maxVal);
+
+        File lineChart = new File( "chart10.jpeg" );
+        try {
+            ChartUtilities.saveChartAsJPEG(lineChart ,chart, 1200 ,600);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static void calculate_means_and_std(Map<Integer, ArrayList<Double>> fitness_errors, Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
