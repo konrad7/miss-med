@@ -24,10 +24,10 @@ public class Main {
     private static final String IN_FILE = "25in_IKr_iv_padelall_pIC_no";
     private static final String TEST_FILE = "t-25in_IKr_iv_padelall_pIC_no";
 
-    private static final int EQUATION_NO = 4;
+    private static final int EQUATION_NO = 1;
     private static final int FILE_NO = 1;
-    private static final int PROGRAM_RUNS = 5;
-    private static final int ITERATIONS = 80;
+    private static final int PROGRAM_RUNS = 1;
+    private static final int ITERATIONS = 60;
     private static final int STEP = 1;
     private static final int POPULATION_NO = 15;
     private static final int MUTATIONS_NO = 200;
@@ -56,6 +56,8 @@ public class Main {
                 if (solutions.size() > POPULATION_NO) {
                     solutions = solutions.subList(0, POPULATION_NO);
                 }
+
+                printResults(solutions, i, run_no);
 
                 Solution bestSolution = solutions.get(0);
                 if(STEP == 1 || i % STEP == 1 ) {
@@ -89,6 +91,17 @@ public class Main {
 //        }
 
         saveResults(mean_errors, std_dev_map);
+    }
+
+    private static void printResults(List<Solution> solutions, int iteration, int run_no) {
+        System.out.println("Run number = " + run_no + " Iteration = " + iteration);
+        for (Solution solution : solutions) {
+            String paramList = solution.getParams().stream()
+                    .map(p -> "[" + p.getValue() + ", " + p.getS() + "]")
+                    .collect(Collectors.joining(","));
+            System.out.println(solution.getFitness() + "-> " + paramList);
+        }
+        System.out.println();
     }
 
     private static void saveResults(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {

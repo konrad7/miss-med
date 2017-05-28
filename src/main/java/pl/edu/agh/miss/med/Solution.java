@@ -38,16 +38,10 @@ public class Solution implements Comparable<Solution>{
 
     private void calculateFitness() {
         double deviationSum = 0.0;
-        int nanCounter = 0;
         for (double[] in : this.inMatrix) {
-            double equationResult = Equation.calculateEquation(this.equationNumber, in, this.params);
-            if (Double.isNaN(equationResult)) {
-                nanCounter++;
-            } else {
-                deviationSum += Math.abs(in[in.length-1] - equationResult);
-            }
+            deviationSum += Math.abs(in[in.length-1] - Equation.calculateEquation(this.equationNumber, in, this.params));
         }
-        this.fitness = inMatrix.length - nanCounter > 0 ? deviationSum/inMatrix.length : Double.MAX_VALUE;
+        this.fitness = deviationSum/inMatrix.length;
     }
 
     @Override
