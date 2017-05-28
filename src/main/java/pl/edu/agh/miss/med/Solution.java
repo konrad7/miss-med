@@ -9,19 +9,22 @@ public class Solution implements Comparable<Solution>{
     private double[][] inMatrix;
     private List<Param> params;
     private double fitness;
+    private int equationNumber;
 
-    public Solution(double[][] inMatrix, int numberOfParams) {
+    public Solution(int equationNumber, double[][] inMatrix) {
         this.inMatrix = inMatrix;
         this.params = new ArrayList<>();
-        for (int i = 0; i < numberOfParams; i++) {
+        for (int i = 0; i < Equation.getNumberOfParameters(equationNumber); i++) {
             params.add(new Param());
         }
+        this.equationNumber = equationNumber;
         this.calculateFitness();
     }
 
-    public Solution(double[][] inMatrix, List<Param> params) {
+    public Solution(int equationNumber, double[][] inMatrix, List<Param> params) {
         this.inMatrix = inMatrix;
         this.params = params;
+        this.equationNumber = equationNumber;
         this.calculateFitness();
     }
 
@@ -35,18 +38,26 @@ public class Solution implements Comparable<Solution>{
 
     private void calculateFitness() {
         double deviationSum = 0.0;
-        for (double[] in : inMatrix) {
-            deviationSum += Math.abs(in[in.length-1] - Equation.calculateFirstEquation(in, this.params));
+        int nanCounter = 0;
+        for (double[] in : this.inMatrix) {
+            double equationResult = Equation.calculateEquation(this.equationNumber, in, this.params);
+            if (Double.isNaN(equationResult)) {
+                nanCounter++;
+            } else {
+                deviationSum += Math.abs(in[in.length-1] - equationResult);
+            }
         }
-        this.fitness = deviationSum/inMatrix.length;
+        this.fitness = inMatrix.length - nanCounter > 0 ? deviationSum/inMatrix.length : Double.MAX_VALUE;
     }
 
     @Override
     public int compareTo(Solution sol) {
-        if(this.getFitness() - sol.getFitness() > 0)
+        if(this.getFitness() - sol.getFitness() > 0.0) {
             return 1;
-        else if(this.getFitness() - sol.getFitness() < 0)
+        }
+        if(this.getFitness() - sol.getFitness() < 0.0) {
             return -1;
+        }
         return 0;
     }
 

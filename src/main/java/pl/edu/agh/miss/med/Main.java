@@ -1,38 +1,36 @@
 package pl.edu.agh.miss.med;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
 
-    private static final String CATALOG = "src/main/resources/";
+    public static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    public static final String CATALOG = "src/main/resources/";
+    public static final String RESULT_CATALOG = "results/";
+    public static final String RESULT_FILE = "result";
+    public static final String FILE_EXT = ".txt";
 
     private static final String IN_FILE = "25in_IKr_iv_padelall_pIC_no";
     private static final String TEST_FILE = "t-25in_IKr_iv_padelall_pIC_no";
-    private static final String FILE_EXT = ".txt";
 
+    private static final int EQUATION_NO = 4;
     private static final int FILE_NO = 1;
-    private static final int POPULATION_NO = 15;
-    private static final int MUTATIONS_NO = 120;
-    private static final int ITERATIONS = 60;
-    private static final int PARAMETERS_NO = 2;
-    private static final int PROGRAM_RUNS = 20;
+    private static final int PROGRAM_RUNS = 5;
+    private static final int ITERATIONS = 80;
     private static final int STEP = 1;
+    private static final int POPULATION_NO = 15;
+    private static final int MUTATIONS_NO = 200;
 
 
     public static void main(String[] args) {
@@ -48,27 +46,23 @@ public class Main {
         for(int run_no = 1; run_no <= PROGRAM_RUNS; run_no++) {
             List<Solution> solutions = new ArrayList<>();
             for (int i = 0; i < POPULATION_NO; i++) {
-                solutions.add(new Solution(inMatrix, PARAMETERS_NO));
+                solutions.add(new Solution(EQUATION_NO, inMatrix));
             }
 
             for (int i = 1; i <= ITERATIONS; i++) {
                 //solutions.addAll(mutation(inMatrix, solutions));
                 solutions = mutation_second_strategy(inMatrix, solutions);
                 Collections.sort(solutions);
-                if (solutions.size() > POPULATION_NO)
+                if (solutions.size() > POPULATION_NO) {
                     solutions = solutions.subList(0, POPULATION_NO);
+                }
 
                 Solution bestSolution = solutions.get(0);
-                if(STEP == 1 || i%STEP == 1 )
+                if(STEP == 1 || i % STEP == 1 ) {
                     fitness_errors.get(i).add(bestSolution.getFitness());
-
-                /*for (Solution solution : solutions) {
-                    System.out.print(solution.getFitness() + " ");
                 }
-                System.out.println();*/
             }
             /*System.out.println();
-            System.out.println();
 
             Solution bestSolution = solutions.get(0);
             double[][] testMatrix = readCSV(CATALOG + TEST_FILE + FILE_NO + FILE_EXT);
@@ -80,77 +74,45 @@ public class Main {
             calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
         }
 
-        for (int key: fitness_errors.keySet()) {
-            System.out.print(key + ": ");
-            for(double error: fitness_errors.get(key)){
-                System.out.print(error + " ");
-            }
-            System.out.println();
-        }
-        for (int key: mean_errors.keySet()) {
-            System.out.print(key + ": " + mean_errors.get(key));
-            System.out.println();
-        }
-        for (int key: std_dev_map.keySet()) {
-            System.out.print(key + ": " + std_dev_map.get(key));
-            System.out.println();
-        }
+//        for (int key: fitness_errors.keySet()) {
+//            System.out.print(key + ": ");
+//            for(double error: fitness_errors.get(key)){
+//                System.out.print(error + " ");
+//            }
+//            System.out.println();
+//        }
+//        for (int key: mean_errors.keySet()) {
+//            System.out.println(key + ": " + mean_errors.get(key));
+//        }
+//        for (int key: std_dev_map.keySet()) {
+//            System.out.println(key + ": " + std_dev_map.get(key));
+//        }
 
-        displayChart(mean_errors, std_dev_map);
+        saveResults(mean_errors, std_dev_map);
     }
 
-    private static void displayChart(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
-        XYSeriesCollection seriesCollection = new XYSeriesCollection();
-        XYSeries meanSeries = new XYSeries("mean");
-        XYSeries stdDev1Series = new XYSeries("std-dev +");
-        XYSeries stdDev2Series = new XYSeries("std-dev -");
+    private static void saveResults(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
+        String title = "EQUATION_NO=" + EQUATION_NO + " FILE_NO=" + FILE_NO + " POPULATION_NO=" + POPULATION_NO
+                + " MUTATIONS_NO=" + MUTATIONS_NO + " ITERATIONS=" + ITERATIONS + " PROGRAM_RUNS=" + PROGRAM_RUNS
+                + " STEP=" + STEP;
 
-        int iterMin = 15;
-        int iterMax = 60;
-        double minVal = Double.MAX_VALUE;
-        double maxVal = Double.MIN_VALUE;
+        String filename = RESULT_FILE + "_" + title.replace(" ", "-") + "_"
+                + sdf.format(Instant.now().toEpochMilli());
 
-        for (Map.Entry<Integer, Double> entry : mean_errors.entrySet()) {
-            double iterNo = entry.getKey();
-            if (iterNo > iterMin && iterNo < iterMax) {
-                double mean = entry.getValue();
-                double std_dev = std_dev_map.get(entry.getKey());
-                meanSeries.add(iterNo, entry.getValue());
-                stdDev1Series.add(iterNo, mean + std_dev);
-                stdDev2Series.add(iterNo, mean - std_dev);
+        Path path = Paths.get(CATALOG + RESULT_CATALOG + filename + FILE_EXT);
 
-                minVal = Math.min(minVal, mean - std_dev);
-                maxVal = Math.max(maxVal, mean + std_dev);
+        try (BufferedWriter writer = Files.newBufferedWriter(path))
+        {
+            writer.write(title + "\n");
+            for (Map.Entry<Integer, Double> entry : mean_errors.entrySet()) {
+                String iteration = String.valueOf(entry.getKey());
+                String mean = String.valueOf(entry.getValue());
+                String std_dev = String.valueOf(std_dev_map.get(entry.getKey()));
+                writer.write(iteration + "\t" + mean + "\t" + std_dev + "\n");
             }
-        }
-
-        seriesCollection.addSeries(meanSeries);
-        seriesCollection.addSeries(stdDev1Series);
-        seriesCollection.addSeries(stdDev2Series);
-
-        String title = "FILE_NO=" + FILE_NO + " POPULATION_NO=" + POPULATION_NO + " MUTATIONS_NO=" + MUTATIONS_NO
-                + " ITERATIONS=" + ITERATIONS + "(" + iterMin + "-" + iterMax + ") PARAMETERS_NO=" + PARAMETERS_NO
-                + " PROGRAM_RUNS=" + PROGRAM_RUNS + " STEP=" + STEP;
-
-        JFreeChart chart = ChartFactory.createXYLineChart(
-                title,"Iteration",
-                "Fitness",
-                seriesCollection, PlotOrientation.VERTICAL,
-                true,true,false);
-
-        XYPlot plot = chart.getXYPlot();
-        ValueAxis iterationAxis = plot.getDomainAxis();
-        iterationAxis.setRange(iterMin, iterMax);
-        ValueAxis valueAxis = plot.getRangeAxis();
-        valueAxis.setRange(minVal, maxVal);
-
-        File lineChart = new File( "chart10.jpeg" );
-        try {
-            ChartUtilities.saveChartAsJPEG(lineChart ,chart, 1200 ,600);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private static void calculate_means_and_std(Map<Integer, ArrayList<Double>> fitness_errors, Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
@@ -185,7 +147,7 @@ public class Main {
         for (Solution solution : solutionsSet) {
             List<Param> mutatedParams = new ArrayList<>();
             List<Param> params = solution.getParams();
-            for (int i = 0; i < PARAMETERS_NO; i++) {
+            for (int i = 0; i < Equation.getNumberOfParameters(EQUATION_NO); i++) {
                 Param param = params.get(i);
                 double newValue = param.getValue() + random.nextGaussian() * param.getS();
                 while (Math.abs(newValue) > 10.0) {
@@ -194,7 +156,7 @@ public class Main {
                 double newS = param.getS() * Math.pow(Math.E, random.nextGaussian());
                 mutatedParams.add(new Param(newValue, newS));
             }
-            mutatedSolutions.add(new Solution(inMatrix, mutatedParams));
+            mutatedSolutions.add(new Solution(EQUATION_NO, inMatrix, mutatedParams));
         }
 
         return mutatedSolutions;
@@ -209,7 +171,7 @@ public class Main {
             solution = solutions.get(random.nextInt(POPULATION_NO));
             List<Param> mutatedParams = new ArrayList<>();
             List<Param> params = solution.getParams();
-            for (int i = 0; i < PARAMETERS_NO; i++) {
+            for (int i = 0; i < Equation.getNumberOfParameters(EQUATION_NO); i++) {
                 Param param = params.get(i);
                 double newValue = param.getValue() + random.nextGaussian() * param.getS();
                 while (Math.abs(newValue) > 1000.0) {
@@ -218,7 +180,7 @@ public class Main {
                 double newS = param.getS() * Math.pow(Math.E, random.nextGaussian());
                 mutatedParams.add(new Param(newValue, newS));
             }
-            mutatedSolutions.add(new Solution(inMatrix, mutatedParams));
+            mutatedSolutions.add(new Solution(EQUATION_NO, inMatrix, mutatedParams));
         }
 
         return mutatedSolutions;
