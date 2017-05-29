@@ -26,21 +26,18 @@ import static pl.edu.agh.miss.med.Main.*;
 
 public class Chart {
 
-    private static final String CHART_FILE = "CHART";
+    private static final String CHART_FILE = "chart";
     private static final String CHART_CATALOG = "charts/";
 
 
     public static void main(String[] args) {
-//        String inputFile = "result_EQUATION_NO=1-FILE_NO=1-POPULATION_NO=15-MUTATIONS_NO=150-ITERATIONS=1000-PROGRAM_RUNS=10-STEP=1_20170522233833";
-//        String inputFile = "result_EQUATION_NO=2-FILE_NO=1-POPULATION_NO=15-MUTATIONS_NO=150-ITERATIONS=200-PROGRAM_RUNS=10-STEP=1_20170522235057";
-//        String inputFile = "result_EQUATION_NO=2-FILE_NO=1-POPULATION_NO=15-MUTATIONS_NO=400-ITERATIONS=100-PROGRAM_RUNS=10-STEP=1_20170523005602";
-        String inputFile = "result_EQUATION_NO=3-FILE_NO=1-POPULATION_NO=15-MUTATIONS_NO=200-ITERATIONS=80-PROGRAM_RUNS=5-STEP=1_20170523085411";
+        String inputFile = "result_20170529225609_EQUATION_NO=1-FILE_NO=1-POPULATION_NO=15-MUTATIONS_NO=200-ITERATIONS=150-PROGRAM_RUNS=5-STEP=1";
 
         Map<Integer, Double> mean_errors = new HashMap<>();
         Map<Integer, Double> std_dev_map = new HashMap<>();
         String title = loadData(CATALOG + RESULT_CATALOG + inputFile + FILE_EXT, mean_errors, std_dev_map);
 
-        displayChart(mean_errors, std_dev_map, title, 27, 40);
+        displayChart(mean_errors, std_dev_map, title, 5, 15);
     }
 
     private static String loadData(String fileName, Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
@@ -102,8 +99,8 @@ public class Chart {
         ValueAxis valueAxis = plot.getRangeAxis();
         valueAxis.setRange(minVal, maxVal);
 
-        String filename = CHART_FILE + "_" + title.replace(" ", "-") + "_RANGE=" + iterMin + "-" + iterMax + "_"
-                + sdf.format(Instant.now().toEpochMilli());
+        String filename = CHART_FILE + "_" + sdf.format(Instant.now().toEpochMilli()) + "_"
+                + title.replace(" ", "-") + "_RANGE=" + iterMin + "-" + iterMax;
 
         File lineChart = new File( CATALOG + CHART_CATALOG + filename + ".jpeg" );
         try {

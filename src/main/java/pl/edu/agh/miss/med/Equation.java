@@ -41,7 +41,7 @@ public class Equation {
     }
 
     private static double calculateThirdEquation(double[] in, List<Param> parameters) {
-        double c1 = parameters.get(0).getValue();
+        double c1 = parameters.get(0).absValue();
         double c2 = parameters.get(1).getValue();
         double c3 = parameters.get(2).getValue();
         double c4 = parameters.get(3).getValue();
@@ -50,12 +50,12 @@ public class Equation {
         double c7 = parameters.get(6).getValue();
         double c8 = parameters.get(7).getValue();
         double c9 = parameters.get(8).getValue();
-        double c10 = parameters.get(9).getValue();
+        double c10 = parameters.get(9).absValue();
         double c11 = parameters.get(10).getValue();
         double c12 = parameters.get(11).getValue();
 
         return Math.log(Math.sqrt(Math.sqrt(Math.exp(Math.log(Math.log(Math.sqrt(c1)+Math.exp(Math.sqrt(Math.exp(
-               Math.sqrt(in[11])+-c2))*(-c3*Math.sqrt(Math.sqrt(Math.exp(in[8]+-c4+in[13]))))+(-c5+(in[9]+in[13]
+               Math.sqrt(in[11])-c2))*(-c3*Math.sqrt(Math.sqrt(Math.exp(in[8]+-c4+in[13]))))+(-c5+(in[9]+in[13]
                +(-c6+Math.sqrt(in[12])))+Math.log(Math.log(in[0]))+(-c7+in[13])))))+(-c8+Math.log(Math.exp(Math.exp(
                Math.sqrt(Math.sqrt(in[23]))+-c9+in[14]))+Math.sqrt(Math.sqrt(Math.exp(in[24]+Math.log(in[24])
                +Math.sqrt(c10)+Math.sqrt(Math.sqrt(in[23]))+in[24]+Math.exp(in[1])+Math.sqrt(Math.sqrt(Math.exp(

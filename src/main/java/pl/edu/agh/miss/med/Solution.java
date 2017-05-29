@@ -2,6 +2,7 @@ package pl.edu.agh.miss.med;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -19,7 +20,7 @@ public class Solution implements Comparable<Solution>{
         this.inMatrix = inMatrix;
         this.params = new ArrayList<>();
         for (int i = 0; i < Equation.getNumberOfParameters(equationNumber); i++) {
-            params.add(new Param(random.nextGaussian(), 10));
+            params.add(new Param(random.nextGaussian(), 10.0));
         }
         this.equationNumber = equationNumber;
         this.calculateFitness();
@@ -43,7 +44,15 @@ public class Solution implements Comparable<Solution>{
     private void calculateFitness() {
         double deviationSum = 0.0;
         for (double[] in : this.inMatrix) {
-            deviationSum += Math.abs(in[in.length-1] - Equation.calculateEquation(this.equationNumber, in, this.params));
+            double equationResult = Equation.calculateEquation(this.equationNumber, in, this.params);
+
+            if (Double.isNaN(equationResult)) {
+                throw new NumberFormatException("Result of equation is NaN\n" + Arrays.toString(in) + "\n" + Arrays.toString(this.params.stream().map(Param::getValue).toArray()));
+            } else if (Double.isInfinite(equationResult)) {
+                throw new NumberFormatException("Result of equation is Inf\n" + Arrays.toString(in) + "\n" + Arrays.toString(this.params.stream().map(Param::getValue).toArray()));
+            }
+
+            deviationSum += Math.abs(in[in.length-1] - equationResult);
         }
         this.fitness = deviationSum/inMatrix.length;
     }

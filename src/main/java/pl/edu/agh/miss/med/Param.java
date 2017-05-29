@@ -22,6 +22,11 @@ public class Param {
         return value;
     }
 
+    public double absValue() {
+         this.value = Math.abs(this.value);
+         return this.value;
+    }
+
     public double getS() {
         return s;
     }

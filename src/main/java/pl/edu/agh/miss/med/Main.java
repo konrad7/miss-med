@@ -19,15 +19,16 @@ public class Main {
     public static final String CATALOG = "src/main/resources/";
     public static final String RESULT_CATALOG = "results/";
     public static final String RESULT_FILE = "result";
+    public static final String LOGS_CATALOG = "logs/";
     public static final String FILE_EXT = ".txt";
 
     private static final String IN_FILE = "25in_IKr_iv_padelall_pIC_no";
     private static final String TEST_FILE = "t-25in_IKr_iv_padelall_pIC_no";
 
-    private static final int EQUATION_NO = 1;
-    private static final int FILE_NO = 1;
-    private static final int PROGRAM_RUNS = 1;
-    private static final int ITERATIONS = 60;
+    private static final int EQUATION_NO = 1; // 1-6
+    private static final int FILE_NO = 1; // 1-10
+    private static final int PROGRAM_RUNS = 100; // minimum 2
+    private static final int ITERATIONS = 100;
     private static final int STEP = 1;
     private static final int POPULATION_NO = 15;
     private static final int MUTATIONS_NO = 200;
@@ -38,6 +39,7 @@ public class Main {
         Map<Integer, ArrayList<Double>> fitness_errors = new HashMap<>();
         Map<Integer, Double> mean_errors = new HashMap<>();
         Map<Integer, Double> std_dev_map = new HashMap<>();
+        List<String> logs = new ArrayList<>();
 
         for(int i = 1; i <= ITERATIONS; i += STEP){
             fitness_errors.put(i, new ArrayList<>());
@@ -57,26 +59,24 @@ public class Main {
                     solutions = solutions.subList(0, POPULATION_NO);
                 }
 
-                printResults(solutions, i, run_no);
+                printResults(solutions, i, run_no, logs);
 
                 Solution bestSolution = solutions.get(0);
                 if(STEP == 1 || i % STEP == 1 ) {
                     fitness_errors.get(i).add(bestSolution.getFitness());
                 }
             }
-            /*System.out.println();
 
-            Solution bestSolution = solutions.get(0);
-            double[][] testMatrix = readCSV(CATALOG + TEST_FILE + FILE_NO + FILE_EXT);
-
-            System.out.println("Observed\tPredicted");
-            for (double[] test : testMatrix) {
-                System.out.println(test[test.length - 1] + "\t\t" + Equation.calculateFirstEquation(test, bestSolution.getParams()));
-            }*/
-            //calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
+//            Solution bestSolution = solutions.get(0);
+//            double[][] testMatrix = readCSV(CATALOG + TEST_FILE + FILE_NO + FILE_EXT);
+//
+//            System.out.println("Observed\tPredicted");
+//            for (double[] test : testMatrix) {
+//                System.out.println(test[test.length - 1] + "\t\t" + Equation.calculateFirstEquation(test, bestSolution.getParams()));
+//            }
         }
-        calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
 
+        calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
 //        for (int key: fitness_errors.keySet()) {
 //            System.out.print(key + ": ");
 //            for(double error: fitness_errors.get(key)){
@@ -91,28 +91,46 @@ public class Main {
 //            System.out.println(key + ": " + std_dev_map.get(key));
 //        }
 
-        saveResults(mean_errors, std_dev_map);
+        String title = "EQUATION_NO=" + EQUATION_NO + " FILE_NO=" + FILE_NO + " POPULATION_NO=" + POPULATION_NO
+                + " MUTATIONS_NO=" + MUTATIONS_NO + " ITERATIONS=" + ITERATIONS + " PROGRAM_RUNS=" + PROGRAM_RUNS
+                + " STEP=" + STEP;
+        String timestamp = sdf.format(Instant.now().toEpochMilli());
+        saveResults(mean_errors, std_dev_map, title, timestamp);
+        saveLogs(logs, title, timestamp);
+        Chart.displayChart(mean_errors, std_dev_map, title, 1, ITERATIONS);
     }
 
-    private static void printResults(List<Solution> solutions, int iteration, int run_no) {
-        System.out.println("Run number = " + run_no + " Iteration = " + iteration);
+    private static void printResults(List<Solution> solutions, int iteration, int run_no, List<String> logs) {
+        String header = "Run number = " + run_no + " Iteration = " + iteration;
+        System.out.println(header);
+
+        logs.add(header);
         for (Solution solution : solutions) {
             String paramList = solution.getParams().stream()
                     .map(p -> "[" + p.getValue() + ", " + p.getS() + "]")
                     .collect(Collectors.joining(","));
-            System.out.println(solution.getFitness() + "-> " + paramList);
+            logs.add(solution.getFitness() + " -> " + paramList);
         }
-        System.out.println();
+        logs.add("\n");
     }
 
-    private static void saveResults(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
-        String title = "EQUATION_NO=" + EQUATION_NO + " FILE_NO=" + FILE_NO + " POPULATION_NO=" + POPULATION_NO
-                + " MUTATIONS_NO=" + MUTATIONS_NO + " ITERATIONS=" + ITERATIONS + " PROGRAM_RUNS=" + PROGRAM_RUNS
-                + " STEP=" + STEP;
+    private static void saveLogs(List<String> logs, String title, String timestamp) {
+        String filename = RESULT_FILE + "_" + timestamp + "_" + title.replace(" ", "-");
+        Path path = Paths.get(CATALOG + LOGS_CATALOG + filename + ".log");
 
-        String filename = RESULT_FILE + "_" + title.replace(" ", "-") + "_"
-                + sdf.format(Instant.now().toEpochMilli());
+        try (BufferedWriter writer = Files.newBufferedWriter(path))
+        {
+            writer.write(title + "\n\n");
+            for (String line : logs) {
+                writer.write(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    private static void saveResults(Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map, String title, String timestamp) {
+        String filename = RESULT_FILE + "_" + timestamp + "_" + title.replace(" ", "-");
         Path path = Paths.get(CATALOG + RESULT_CATALOG + filename + FILE_EXT);
 
         try (BufferedWriter writer = Files.newBufferedWriter(path))
@@ -130,20 +148,18 @@ public class Main {
     }
 
     private static void calculate_means_and_std(Map<Integer, ArrayList<Double>> fitness_errors, Map<Integer, Double> mean_errors, Map<Integer, Double> std_dev_map) {
-        double mean, std_dev;
-        for (int key: fitness_errors.keySet()) {
-            mean = 0;
-            std_dev = 0;
-            for(double error: fitness_errors.get(key)){
-                mean += error;
-            }
-            mean /= fitness_errors.get(key).size();
+        for (Integer key: fitness_errors.keySet()) {
+            double size = fitness_errors.get(key).size();
+            double errorSum = fitness_errors.get(key).stream()
+                    .mapToDouble(Double::doubleValue).sum();
+            final double mean = errorSum / size;
+
+            double std_dev_sum = fitness_errors.get(key).stream()
+                    .mapToDouble(Double::doubleValue)
+                    .map(err -> Math.pow(err - mean, 2)).sum();
+            final double std_dev = Math.sqrt(std_dev_sum / (size - 1.0));
+
             mean_errors.put(key, mean);
-            for(double error: fitness_errors.get(key)){
-                std_dev += Math.pow(error-mean,2);
-            }
-            std_dev /= fitness_errors.get(key).size()-1;
-            std_dev = Math.sqrt(std_dev);
             std_dev_map.put(key, std_dev);
         }
     }
@@ -184,18 +200,14 @@ public class Main {
         for (int k = 0; k < MUTATIONS_NO; k++) {
             solution = solutions.get(random.nextInt(POPULATION_NO));
             List<Param> mutatedParams = new ArrayList<>();
-            List<Param> params = solution.getParams();
-            for (int i = 0; i < Equation.getNumberOfParameters(EQUATION_NO); i++) {
-                Param param = params.get(i);
+            for(Param param : solution.getParams()) {
                 double newValue = param.getValue() + random.nextGaussian() * param.getS();
                 /*while (Math.abs(newValue) > 1000.0) {
                     newValue = param.getValue() + random.nextGaussian() * param.getS();
                 }*/
                 double newS = param.getS() * Math.pow(Math.E, random.nextGaussian());
-                if(newS < 1){
-                    do{
-                        newS *= 10;
-                    } while (newS < 1);
+                while (Math.abs(newS) < 1) {
+                    newS *= 10;
                 }
                 mutatedParams.add(new Param(newValue, newS));
             }
