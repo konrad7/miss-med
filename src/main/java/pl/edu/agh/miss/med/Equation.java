@@ -41,7 +41,7 @@ public class Equation {
     }
 
     private static double calculateThirdEquation(double[] in, List<Param> parameters) {
-        double c1 = parameters.get(0).absValue();
+        double c1 = parameters.get(0).getValue();
         double c2 = parameters.get(1).getValue();
         double c3 = parameters.get(2).getValue();
         double c4 = parameters.get(3).getValue();
@@ -50,7 +50,7 @@ public class Equation {
         double c7 = parameters.get(6).getValue();
         double c8 = parameters.get(7).getValue();
         double c9 = parameters.get(8).getValue();
-        double c10 = parameters.get(9).absValue();
+        double c10 = parameters.get(9).getValue();
         double c11 = parameters.get(10).getValue();
         double c12 = parameters.get(11).getValue();
 
