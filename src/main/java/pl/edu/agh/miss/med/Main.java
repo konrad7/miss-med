@@ -73,8 +73,9 @@ public class Main {
             for (double[] test : testMatrix) {
                 System.out.println(test[test.length - 1] + "\t\t" + Equation.calculateFirstEquation(test, bestSolution.getParams()));
             }*/
-            calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
+            //calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
         }
+        calculate_means_and_std(fitness_errors, mean_errors, std_dev_map);
 
 //        for (int key: fitness_errors.keySet()) {
 //            System.out.print(key + ": ");
@@ -187,10 +188,15 @@ public class Main {
             for (int i = 0; i < Equation.getNumberOfParameters(EQUATION_NO); i++) {
                 Param param = params.get(i);
                 double newValue = param.getValue() + random.nextGaussian() * param.getS();
-                while (Math.abs(newValue) > 1000.0) {
+                /*while (Math.abs(newValue) > 1000.0) {
                     newValue = param.getValue() + random.nextGaussian() * param.getS();
-                }
+                }*/
                 double newS = param.getS() * Math.pow(Math.E, random.nextGaussian());
+                if(newS < 1){
+                    do{
+                        newS *= 10;
+                    } while (newS < 1);
+                }
                 mutatedParams.add(new Param(newValue, newS));
             }
             mutatedSolutions.add(new Solution(EQUATION_NO, inMatrix, mutatedParams));

@@ -3,6 +3,7 @@ package pl.edu.agh.miss.med;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Solution implements Comparable<Solution>{
 
@@ -12,10 +13,13 @@ public class Solution implements Comparable<Solution>{
     private int equationNumber;
 
     public Solution(int equationNumber, double[][] inMatrix) {
+
+        Random random = new Random();
+
         this.inMatrix = inMatrix;
         this.params = new ArrayList<>();
         for (int i = 0; i < Equation.getNumberOfParameters(equationNumber); i++) {
-            params.add(new Param());
+            params.add(new Param(random.nextGaussian(), 10));
         }
         this.equationNumber = equationNumber;
         this.calculateFitness();
